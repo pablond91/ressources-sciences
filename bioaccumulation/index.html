@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Exercice Auto-correctif - Transfert, Niveaux Trophiques & Bioaccumulation</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f7f6;
+      color: #2c3e50;
+      padding: 20px;
+      max-width: 850px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      margin-bottom: 25px;
+    }
+
+    h2, h3 { color: #1d3557; }
+
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #2a9d8f;
+      font-size: 1em;
+      font-weight: bold;
+      color: #1d3557;
+      background-color: #f8f9fa;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .scenario-img {
+      width: 100%;
+      max-height: 250px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin: 15px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+
+    /* Drag/Drop - Reorder */
+    .step-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .step-item {
+      background: #e8f4f8;
+      border: 1px solid #bde0fe;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+    }
+
+    .step-item:active { cursor: grabbing; background: #caf0f8; }
+
+    button {
+      background-color: #2a9d8f;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover { background-color: #218276; }
+
+    .feedback {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    /* Textarea & Keyword checklist */
+    textarea {
+      width: 100%;
+      height: 130px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: inherit;
+      box-sizing: border-box;
+      margin-top: 10px;
+    }
+
+    .kw-counter {
+      font-weight: bold;
+      color: #1d3557;
+      margin-bottom: 8px;
+    }
+
+    .checklist {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 8px;
+      min-height: 35px;
+    }
+
+    .tag-check {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: bold;
+      color: white;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .tag-check.correct {
+      background: #2a9d8f; /* Vert */
+    }
+
+    .tag-check.wrong-order {
+      background: #e76f51; /* Orange / Rouge */
+    }
+
+    .instruction-box {
+      background-color: #e8f4f8;
+      border-left: 4px solid #2a9d8f;
+      padding: 10px 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 0.9em;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🌊 Mission : Le voyage des polluants dans la chaîne alimentaire</h2>
+
+  <!-- CHOIX DE LA SITUATION -->
+  <div class="card">
+    <h3>1. Choisis une situation d'étude :</h3>
+    <select id="scenario-select" onchange="loadScenario()">
+      <option value="0">Situation 1 : Pesticides sur champ & Chaîne aquatique (Mécanisme complet)</option>
+      <option value="1">Situation 2 : Traitement d'une prairie & Lait de vache (Sans Hydrosphère)</option>
+      <option value="2">Situation 3 : Déversement usine dans une rivière (Sans Lithosphère)</option>
+      <option value="3">Situation 4 : Traitement insecticide forestier & Gibier</option>
+      <option value="4">Situation 5 : Fonderie, fumées toxiques & Légumes du potager</option>
+    </select>
+
+    <img id="scenario-image" class="scenario-img" src="" alt="Illustration de la situation">
+    <div id="scenario-description" class="instruction-box"></div>
+  </div>
+
+  <!-- ÉTAPE 1 : Remettre dans l'ordre -->
+  <div class="card">
+    <h3>2. Reconstitue le trajet du polluant</h3>
+    <p><small>Glisse et déplace les étapes ci-dessous pour remettre la séquence dans l'ordre chronologique :</small></p>
+
+    <ul class="step-list" id="sortable-list"></ul>
+
+    <button onclick="checkOrder()">Vérifier l'ordre 🔍</button>
+    <div class="feedback" id="order-feedback"></div>
+  </div>
+
+  <!-- ÉTAPE 2 : Rédaction guidée avec détection dynamique -->
+  <div class="card">
+    <h3>3. Rédige ton texte explicatif</h3>
+    <p><small>Explique le parcours du polluant et son amplification à travers les niveaux trophiques. Les mots-clés scientifiques apparaîtront automatiquement au fil de ta rédaction !</small></p>
+
+    <div class="kw-counter" id="kw-counter">Mots-clés découverts : 0 / 0</div>
+    <div class="checklist" id="checklist-container"></div>
+
+    <textarea id="user-text" placeholder="Rédige ton texte ici..." oninput="checkKeywordsDynamic()"></textarea>
+    <div class="feedback" id="text-feedback"></div>
+  </div>
+
+  <script>
+    const scenarios = [
+      {
+        title: "Pesticides sur champ & Lessivage aquatique",
+        desc: "<b>Contexte :</b> Un pesticide est appliqué sur un champ. Il est entraîné par la pluie vers la rivière puis s'accumule à chaque niveau trophique de la chaîne alimentaire aquatique.",
+        img: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?auto=format&fit=crop&w=800&q=80",
+        steps: [
+          { id: "1", text: "🪨 <b>Lithosphère :</b> Épandage de pesticides sur le sol agricole." },
+          { id: "2", text: "💧 <b>Hydrosphère :</b> Lessivage par les pluies vers la rivière." },
+          { id: "3", text: "🌱 <b>Producteur primaire (Biosphère) :</b> Absorption du polluant par le phytoplancton." },
+          { id: "4", text: "🐟 <b>Consommateurs (Biosphère) :</b> Les zooplanctons puis petits poissons consomment les proies contaminées." },
+          { id: "5", text: "🦅 <b>Super-prédateur :</b> Bioaccumulation maximale au sommet de la chaîne alimentaire (Loutre, Aigle, Homme)." }
+        ],
+        keywords: [
+          { key: "lithosphère", label: "Lithosphère" },
+          { key: "lessivage", label: "Lessivage" },
+          { key: "hydrosphère", label: "Hydrosphère" },
+          { key: "producteur", label: "Producteur primaire" },
+          { key: "consommateur", label: "Consommateur" },
+          { key: "bioaccumulation", label: "Bioaccumulation" },
+          { key: "prédateur", label: "Super-prédateur" }
+        ]
+      },
+      {
+        title: "Herbicide en prairie & Consommation bovine",
+        desc: "<b>Contexte :</b> Un herbicide est pulvérisé sur une prairie. L'herbe (producteur) fixe le toxique. Les vaches (consommateurs) l'accumulent dans leur lait et leur viande.",
+        img: "https://images.unsplash.com/photo-1527153857715-3908f2bae5e8?auto=format&fit=crop&w=800&q=80",
+        steps: [
+          { id: "1", text: "🪨 <b>Lithosphère :</b> Traitement de la terre d'une prairie avec un herbicide." },
+          { id: "2", text: "🌿 <b>Producteur primaire :</b> L'herbe absorbe le produit toxique sans le décomposer." },
+          { id: "3", text: "🐄 <b>Consommateur :</b> La vache broute l'herbe contaminée au quotidien." },
+          { id: "4", text: "🥛 <b>Bioaccumulation :</b> Stockage progressif des toxiques dans les tissus graisseux et le lait." },
+          { id: "5", text: "🧍 <b>Super-prédateur :</b> L'Homme ingère des doses concentrées via les produits laitiers et la viande." }
+        ],
+        keywords: [
+          { key: "lithosphère", label: "Lithosphère" },
+          { key: "producteur", label: "Producteur" },
+          { key: "consommateur", label: "Consommateur" },
+          { key: "bioaccumulation", label: "Bioaccumulation" },
+          { key: "prédateur", label: "Super-prédateur" }
+        ]
+      },
+      {
+        title: "Déversement industriel dans une rivière",
+        desc: "<b>Contexte :</b> Une usine rejette des métaux lourds (mercure) directement dans un cours d'eau. La contamination s'amplifie à chaque maillon aquatique.",
+        img: "https://images.unsplash.com/photo-1611273426858-450d8e3c9fce?auto=format&fit=crop&w=800&q=80",
+        steps: [
+          { id: "1", text: "🏭 <b>Émission :</b> Rejet de métaux lourds toxiques par une usine." },
+          { id: "2", text: "💧 <b>Hydrosphère :</b> Dispersion des polluants solubles dans le cours d'eau." },
+          { id: "3", text: "🦠 <b>Producteur primaire :</b> Fixation sur les micro-algues de la rivière." },
+          { id: "4", text: "🐟 <b>Consommateurs :</b> Ingestion par les crustacés, puis par les poissons carnivores." },
+          { id: "5", text: "🦅 <b>Super-prédateur :</b> Bioaccumulation critique chez les oiseaux pêcheurs (Héron) et l'Homme." }
+        ],
+        keywords: [
+          { key: "hydrosphère", label: "Hydrosphère" },
+          { key: "producteur", label: "Producteur" },
+          { key: "consommateur", label: "Consommateur" },
+          { key: "bioaccumulation", label: "Bioaccumulation" },
+          { key: "prédateur", label: "Super-prédateur" }
+        ]
+      },
+      {
+        title: "Traitement insecticide en forêt",
+        desc: "<b>Contexte :</b> Un insecticide est pulvérisé sur la forêt. La végétation absorbe le produit et la faune sauvage accumule la toxine.",
+        img: "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=800&q=80",
+        steps: [
+          { id: "1", text: "✈️ <b>Atmosphère :</b> Pulvérisation aérienne de l'insecticide sur les arbres." },
+          { id: "2", text: "🌲 <b>Producteur primaire :</b> Dépôt sur les feuilles, arbustes et champignons du sol." },
+          { id: "3", text: "🐗 <b>Consommateur :</b> Le gibier (sangliers, chevreuils) consomme la végétation contaminée." },
+          { id: "4", text: "🥩 <b>Bioaccumulation :</b> Concentration accrue des molécules chimiques dans les muscles et organes du gibier." },
+          { id: "5", text: "🧍 <b>Super-prédateur :</b> L'Homme consomme la viande de chasse au sommet de la chaîne." }
+        ],
+        keywords: [
+          { key: "atmosphère", label: "Atmosphère" },
+          { key: "producteur", label: "Producteur" },
+          { key: "consommateur", label: "Consommateur" },
+          { key: "bioaccumulation", label: "Bioaccumulation" },
+          { key: "prédateur", label: "Super-prédateur" }
+        ]
+      },
+      {
+        title: "Retombées industrielles sur potager",
+        desc: "<b>Contexte :</b> Les fumées d'une fonderie dispersent du plomb dans l'air. Le métal retombe sur les sols du potager et contamine la chaîne alimentaire.",
+        img: "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80",
+        steps: [
+          { id: "1", text: "☁️ <b>Atmosphère :</b> Fumées chargées de plomb issues des usines." },
+          { id: "2", text: "🪨 <b>Lithosphère :</b> Retombées et accumulation du plomb dans le sol du potager." },
+          { id: "3", text: "🥕 <b>Producteur primaire :</b> Absorption du plomb par les racines des légumes (carottes, salades)." },
+          { id: "4", text: "🥗 <b>Consommateur :</b> Ingestion régulière des légumes contaminés par l'Homme." },
+          { id: "5", text: "🧍 <b>Bioaccumulation :</b> Stockage définitif du métal lourd dans les os et organes de l'Homme (super-prédateur)." }
+        ],
+        keywords: [
+          { key: "atmosphère", label: "Atmosphère" },
+          { key: "lithosphère", label: "Lithosphère" },
+          { key: "producteur", label: "Producteur" },
+          { key: "consommateur", label: "Consommateur" },
+          { key: "bioaccumulation", label: "Bioaccumulation" },
+          { key: "prédateur", label: "Super-prédateur" }
+        ]
+      }
+    ];
+
+    let currentScenarioIndex = 0;
+    let draggedItem = null;
+
+    function loadScenario() {
+      currentScenarioIndex = document.getElementById('scenario-select').value;
+      const sc = scenarios[currentScenarioIndex];
+
+      document.getElementById('scenario-image').src = sc.img;
+      document.getElementById('scenario-description').innerHTML = sc.desc;
+      document.getElementById('order-feedback').innerText = "";
+      document.getElementById('text-feedback').innerText = "";
+      document.getElementById('user-text').value = "";
+
+      // Mélanger les étapes
+      const shuffledSteps = [...sc.steps].sort(() => Math.random() - 0.5);
+      const listEl = document.getElementById('sortable-list');
+      listEl.innerHTML = "";
+
+      shuffledSteps.forEach(step => {
+        const li = document.createElement('li');
+        li.className = 'step-item';
+        li.draggable = true;
+        li.setAttribute('data-id', step.id);
+        li.innerHTML = step.text;
+        listEl.appendChild(li);
+      });
+
+      addDragEvents();
+      updateKWCounter(0, sc.keywords.length);
+      document.getElementById('checklist-container').innerHTML = "";
+    }
+
+    function addDragEvents() {
+      const list = document.getElementById('sortable-list');
+      const items = list.querySelectorAll('.step-item');
+
+      items.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+          draggedItem = e.target;
+          e.target.style.opacity = '0.5';
+        });
+
+        item.addEventListener('dragend', (e) => {
+          e.target.style.opacity = '1';
+        });
+      });
+
+      list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(list, e.clientY);
+        if (afterElement == null) {
+          list.appendChild(draggedItem);
+        } else {
+          list.insertBefore(draggedItem, afterElement);
+        }
+      });
+    }
+
+    function getDragAfterElement(container, y) {
+      const draggableElements = [...container.querySelectorAll('.step-item:not(.dragging)')];
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          return { offset: offset, element: child };
+        } else {
+          return closest;
+        }
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function checkOrder() {
+      const items = [...document.querySelectorAll('#sortable-list .step-item')];
+      const currentOrder = items.map(item => item.getAttribute('data-id')).join('');
+      const feedback = document.getElementById('order-feedback');
+
+      if (currentOrder === "12345") {
+        feedback.style.color = "#2a9d8f";
+        feedback.innerText = "✅ Excellent ! Le transfert entre niveaux trophiques est parfaitement ordonné.";
+      } else {
+        feedback.style.color = "#e76f51";
+        feedback.innerText = "❌ Ce n'est pas l'ordre chronologique exact. Réessaie !";
+      }
+    }
+
+    // --- Nouvelle logique de détection dynamique des mots-clés ---
+    function checkKeywordsDynamic() {
+      const text = document.getElementById('user-text').value.toLowerCase();
+      const sc = scenarios[currentScenarioIndex];
+      const container = document.getElementById('checklist-container');
+      const feedback = document.getElementById('text-feedback');
+
+      container.innerHTML = ""; // Vider pour tout réafficher proprement
+      
+      let discoveredCount = 0;
+      let lastIndex = -1;
+      let hasOrderError = false;
+
+      sc.keywords.forEach(kw => {
+        const foundIndex = text.indexOf(kw.key.toLowerCase());
+
+        if (foundIndex !== -1) {
+          discoveredCount++;
+          const span = document.createElement('span');
+          span.className = 'tag-check';
+
+          // Vérification de l'ordre
+          if (foundIndex >= lastIndex) {
+            span.classList.add('correct');
+            span.innerText = "✅ " + kw.label;
+            lastIndex = foundIndex;
+          } else {
+            span.classList.add('wrong-order');
+            span.innerText = "⚠️ " + kw.label + " (Mal placé)";
+            hasOrderError = true;
+          }
+          container.appendChild(span);
+        }
+      });
+
+      updateKWCounter(discoveredCount, sc.keywords.length);
+
+      if (hasOrderError) {
+        feedback.style.color = "#e76f51";
+        feedback.innerText = "⚠️ Un ou plusieurs mots-clés apparaissent hors de la séquence chronologique !";
+      } else if (discoveredCount === sc.keywords.length) {
+        feedback.style.color = "#2a9d8f";
+        feedback.innerText = "🎉 Félicitations ! Tous les mots-clés sont utilisés dans le bon ordre chronologique !";
+      } else {
+        feedback.innerText = "";
+      }
+    }
+
+    function updateKWCounter(found, total) {
+      document.getElementById('kw-counter').innerText = `Mots-clés découverts : ${found} / ${total}`;
+    }
+
+    loadScenario();
+  </script>
+</body>
+</html>
