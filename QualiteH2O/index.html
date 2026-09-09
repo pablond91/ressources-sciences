@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>La qualité de l'eau - Activité interactive</title>
+<style>
+  :root{
+    --bg:#f4f8fb;
+    --card:#ffffff;
+    --text:#193042;
+    --muted:#607483;
+    --border:#c9d7e1;
+    --ok:#2d7d46;
+    --bad:#b53a3a;
+    --accent:#2f6fa3;
+    --accent-soft:#e9f3fb;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    line-height:1.5;
+  }
+  header{
+    background:#fff;
+    border-bottom:1px solid var(--border);
+    padding:24px 18px;
+  }
+  header .wrap, main{
+    max-width:1100px;
+    margin:auto;
+  }
+  h1{margin:0 0 6px;font-size:2rem}
+  h2{margin-top:0}
+  .lead{margin:0;color:var(--muted)}
+  main{padding:24px 18px 48px}
+  .panel{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+  }
+  .instructions{
+    background:var(--accent-soft);
+    border-left:5px solid var(--accent);
+  }
+  .layout{
+    display:grid;
+    grid-template-columns:1fr 1.35fr;
+    gap:18px;
+  }
+  @media(max-width:820px){.layout{grid-template-columns:1fr}}
+  .terms, .definitions{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .term{
+    background:#fff;
+    border:2px solid var(--accent);
+    color:var(--accent);
+    font-weight:700;
+    border-radius:12px;
+    padding:14px 16px;
+    cursor:grab;
+    user-select:none;
+    touch-action:none;
+  }
+  .term:active{cursor:grabbing}
+  .term.locked{
+    opacity:.45;
+    cursor:default;
+    border-style:dashed;
+  }
+  .dropzone{
+    border:2px dashed var(--border);
+    border-radius:12px;
+    min-height:84px;
+    padding:12px;
+    background:#fbfdff;
+    transition:.15s ease;
+  }
+  .dropzone.dragover{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .definition-text{
+    color:var(--text);
+    margin-bottom:10px;
+  }
+  .answer-slot{
+    min-height:40px;
+    border-radius:10px;
+    padding:8px 10px;
+    background:#eef3f7;
+    color:var(--muted);
+    display:flex;
+    align-items:center;
+    font-weight:700;
+  }
+  .answer-slot.correct{
+    background:#e8f5ec;
+    color:var(--ok);
+  }
+  .feedback{
+    margin-top:8px;
+    font-size:.95rem;
+    font-weight:700;
+    min-height:1.4em;
+  }
+  .feedback.ok{color:var(--ok)}
+  .feedback.bad{color:var(--bad)}
+  .progress{
+    margin-top:14px;
+    font-weight:700;
+  }
+  .quiz-card{
+    border-top:1px solid var(--border);
+    padding:18px 0;
+  }
+  .quiz-card:first-child{border-top:none;padding-top:0}
+  .question{
+    font-weight:700;
+    margin-bottom:10px;
+  }
+  .answers{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  button{
+    appearance:none;
+    border:1px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    border-radius:10px;
+    padding:10px 14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  button:hover{border-color:var(--accent)}
+  button.correct{
+    border-color:var(--ok);
+    background:#e8f5ec;
+    color:var(--ok);
+  }
+  button.incorrect{
+    border-color:var(--bad);
+    background:#fbeaea;
+    color:var(--bad);
+  }
+  .reset{
+    background:var(--accent);
+    color:#fff;
+    border-color:var(--accent);
+    margin-top:12px;
+  }
+  .hidden{display:none}
+  .final-box{
+    margin-top:16px;
+    padding:14px;
+    border-radius:12px;
+    background:#f3f7fa;
+    font-weight:700;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>La qualité de l'eau</h1>
+    <p class="lead">Associe les notions à leur définition, puis réponds aux mini-questions.</p>
+  </div>
+</header>
+
+<main>
+  <section class="panel instructions">
+    <h2>Consigne</h2>
+    <p>Fais glisser chaque notion vers la définition qui lui correspond. Si ton choix est incorrect, tu peux réessayer immédiatement. Une fois toutes les associations réussies, passe aux mini-questions.</p>
+  </section>
+
+  <section class="panel">
+    <h2>1. Associe les notions</h2>
+    <div class="layout">
+      <div>
+        <h3>Notions</h3>
+        <div class="terms" id="terms">
+          <div class="term" draggable="true" data-key="durete">Dureté</div>
+          <div class="term" draggable="true" data-key="ph">pH</div>
+          <div class="term" draggable="true" data-key="nitrates">Nitrates</div>
+          <div class="term" draggable="true" data-key="pesticides">Pesticides</div>
+          <div class="term" draggable="true" data-key="calcium">Ca²⁺</div>
+        </div>
+      </div>
+
+      <div>
+        <h3>Définitions</h3>
+        <div class="definitions">
+          <div class="dropzone" data-key="ph">
+            <div class="definition-text">Mesure de l'acidité de l'eau à partir de la concentration en ions hydrogène.</div>
+            <div class="answer-slot">Dépose une notion ici</div>
+            <div class="feedback"></div>
+          </div>
+
+          <div class="dropzone" data-key="pesticides">
+            <div class="definition-text">Substances utilisées pour lutter contre des organismes considérés comme nuisibles, par exemple des insectes, des champignons ou des mauvaises herbes.</div>
+            <div class="answer-slot">Dépose une notion ici</div>
+            <div class="feedback"></div>
+          </div>
+
+          <div class="dropzone" data-key="calcium">
+            <div class="definition-text">Ion calcium dissous dans l'eau. Il participe notamment à la dureté de l'eau.</div>
+            <div class="answer-slot">Dépose une notion ici</div>
+            <div class="feedback"></div>
+          </div>
+
+          <div class="dropzone" data-key="durete">
+            <div class="definition-text">Teneur en calcium et en magnésium dissous dans l'eau.</div>
+            <div class="answer-slot">Dépose une notion ici</div>
+            <div class="feedback"></div>
+          </div>
+
+          <div class="dropzone" data-key="nitrates">
+            <div class="definition-text">Composés chimiques liés à l'azote. Leurs principales sources citées dans le cours sont les engrais et les rejets domestiques d'eaux usées.</div>
+            <div class="answer-slot">Dépose une notion ici</div>
+            <div class="feedback"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="progress" id="progress">0 / 5 associations correctes</div>
+  </section>
+
+  <section class="panel hidden" id="quizPanel">
+    <h2>2. Mini-questions</h2>
+    <div id="quiz">
+
+      <div class="quiz-card" data-correct="b">
+        <div class="question">1. Une eau dure contient beaucoup de...</div>
+        <div class="answers">
+          <button data-choice="a">sucre et sel</button>
+          <button data-choice="b">calcium et magnésium</button>
+          <button data-choice="c">pesticides uniquement</button>
+        </div>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="quiz-card" data-correct="a">
+        <div class="question">2. Le pH renseigne principalement sur...</div>
+        <div class="answers">
+          <button data-choice="a">l'acidité de l'eau</button>
+          <button data-choice="b">la quantité de calcium</button>
+          <button data-choice="c">la présence d'insectes</button>
+        </div>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="quiz-card" data-correct="c">
+        <div class="question">3. Parmi ces propositions, quelle source de nitrates est citée dans le cours ?</div>
+        <div class="answers">
+          <button data-choice="a">La lumière du Soleil</button>
+          <button data-choice="b">Le vent</button>
+          <button data-choice="c">Les engrais</button>
+        </div>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="quiz-card" data-correct="b">
+        <div class="question">4. Un herbicide est...</div>
+        <div class="answers">
+          <button data-choice="a">un type de nitrate</button>
+          <button data-choice="b">un type de pesticide</button>
+          <button data-choice="c">un minéral de l'eau</button>
+        </div>
+        <div class="feedback"></div>
+      </div>
+
+      <div class="quiz-card" data-correct="a">
+        <div class="question">5. L'ion Ca²⁺ correspond à...</div>
+        <div class="answers">
+          <button data-choice="a">un ion calcium</button>
+          <button data-choice="b">un nitrate</button>
+          <button data-choice="c">un pesticide</button>
+        </div>
+        <div class="feedback"></div>
+      </div>
+
+    </div>
+
+    <div class="final-box" id="finalBox">Score : 0 / 5</div>
+    <button class="reset" id="resetBtn">Recommencer l'activité</button>
+  </section>
+</main>
+
+<script>
+let dragged = null;
+let correctMatches = 0;
+let quizScore = 0;
+let answered = new Set();
+
+const terms = document.querySelectorAll('.term');
+const zones = document.querySelectorAll('.dropzone');
+const progress = document.getElementById('progress');
+const quizPanel = document.getElementById('quizPanel');
+
+terms.forEach(term => {
+  term.addEventListener('dragstart', () => {
+    if (term.classList.contains('locked')) return;
+    dragged = term;
+  });
+
+  // Support tactile simple
+  term.addEventListener('click', () => {
+    if (term.classList.contains('locked')) return;
+    document.querySelectorAll('.term').forEach(t => t.style.outline = '');
+    term.style.outline = '3px solid #2f6fa3';
+    dragged = term;
+  });
+});
+
+zones.forEach(zone => {
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('dragover');
+  });
+
+  zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('dragover');
+    attemptMatch(zone);
+  });
+
+  zone.addEventListener('click', () => {
+    if (dragged && !dragged.classList.contains('locked')) {
+      attemptMatch(zone);
+    }
+  });
+});
+
+function attemptMatch(zone){
+  if (!dragged) return;
+  const slot = zone.querySelector('.answer-slot');
+  const fb = zone.querySelector('.feedback');
+
+  if (dragged.dataset.key === zone.dataset.key){
+    slot.textContent = dragged.textContent;
+    slot.classList.add('correct');
+    fb.textContent = 'Correct !';
+    fb.className = 'feedback ok';
+
+    dragged.classList.add('locked');
+    dragged.setAttribute('draggable','false');
+    dragged.style.outline = '';
+    dragged = null;
+
+    correctMatches++;
+    progress.textContent = `${correctMatches} / 5 associations correctes`;
+
+    if(correctMatches === 5){
+      progress.textContent = '5 / 5 associations correctes — bravo !';
+      quizPanel.classList.remove('hidden');
+      quizPanel.scrollIntoView({behavior:'smooth'});
+    }
+  }else{
+    fb.textContent = 'Ce n’est pas la bonne association. Réessaie.';
+    fb.className = 'feedback bad';
+    if(dragged) dragged.style.outline = '';
+    dragged = null;
+  }
+}
+
+document.querySelectorAll('.quiz-card').forEach((card, index) => {
+  const buttons = card.querySelectorAll('button');
+  const fb = card.querySelector('.feedback');
+  const correct = card.dataset.correct;
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if(answered.has(index)) return;
+
+      if(btn.dataset.choice === correct){
+        btn.classList.add('correct');
+        fb.textContent = 'Correct !';
+        fb.className = 'feedback ok';
+        quizScore++;
+        answered.add(index);
+        buttons.forEach(b => b.disabled = true);
+        updateScore();
+      }else{
+        btn.classList.add('incorrect');
+        fb.textContent = 'Incorrect. Relis la question et essaie encore.';
+        fb.className = 'feedback bad';
+        setTimeout(() => btn.classList.remove('incorrect'), 700);
+      }
+    });
+  });
+});
+
+function updateScore(){
+  const box = document.getElementById('finalBox');
+  if(answered.size < 5){
+    box.textContent = `Score : ${quizScore} / 5`;
+  }else{
+    box.textContent = `Score final : ${quizScore} / 5 — activité terminée.`;
+  }
+}
+
+document.getElementById('resetBtn').addEventListener('click', () => location.reload());
+</script>
+</body>
+</html>
